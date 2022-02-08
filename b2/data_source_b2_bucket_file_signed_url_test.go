@@ -13,6 +13,7 @@ package b2
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -28,6 +29,8 @@ func TestAccDataSourceB2BucketFileSignedUrl_singleFile(t *testing.T) {
 	tempFile := createTempFile(t, "hello")
 	defer os.Remove(tempFile)
 
+	expectedSignedUrlId, _ := regexp.Compile(".*/temp.txt:3600")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: providerFactories,
@@ -38,7 +41,7 @@ func TestAccDataSourceB2BucketFileSignedUrl_singleFile(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket_id", parentResourceName, "bucket_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_name", resourceName, "file_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "signed_url"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", dataSourceName, "signed_url"),
+					resource.TestMatchResourceAttr(dataSourceName, "id", expectedSignedUrlId),
 				),
 			},
 		},
